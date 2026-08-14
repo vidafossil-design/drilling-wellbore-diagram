@@ -1,0 +1,1214 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>钻井液井身结构可视化</title>
+    <style>
+:root {
+  --bg: #eef2ef;
+  --panel: #ffffff;
+  --panel-soft: #f7faf8;
+  --ink: #111827;
+  --muted: #5f6b66;
+  --line: #c7d2cd;
+  --line-strong: #24322e;
+  --accent: #0f766e;
+  --accent-dark: #075e57;
+  --warning: #d97706;
+  --danger: #b91c1c;
+  --input-bg: #fcfefd;
+  font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  min-height: 34px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--accent);
+  cursor: pointer;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+button:hover {
+  background: var(--accent-dark);
+}
+
+button.secondary {
+  color: var(--ink);
+  border-color: var(--line);
+  background: #ffffff;
+}
+
+.app-shell {
+  width: min(1760px, calc(100vw - 28px));
+  margin: 14px auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: clamp(22px, 2.1vw, 32px);
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.topbar p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(130px, 1fr));
+  gap: 10px;
+  min-width: 440px;
+}
+
+.summary-strip div {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+  padding: 10px 12px;
+}
+
+.summary-strip span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.summary-strip strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+}
+
+.controls-band {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.controls-band label,
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controls-band label {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.controls-band span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.controls-band input,
+td input,
+td select {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--input-bg);
+  padding: 4px 7px;
+}
+
+.controls-band input:focus,
+td input:focus,
+td select:focus {
+  outline: 2px solid rgba(15, 118, 110, 0.22);
+  border-color: var(--accent);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(660px, 1.05fr) minmax(540px, 0.95fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.editor-panel,
+.visual-panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.view-actions {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.switch input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.table-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 255px);
+}
+
+table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+th,
+td {
+  border: 1px solid var(--line-strong);
+  padding: 5px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #dceee2;
+  font-weight: 700;
+}
+
+tbody tr:nth-child(even) {
+  background: #f4faf6;
+}
+
+tbody tr.selected-row {
+  background: #e1f3ef;
+}
+
+tbody tr.invalid-row {
+  background: #fff3e2;
+}
+
+.row-index {
+  width: 42px;
+}
+
+td:nth-child(2) {
+  width: 220px;
+}
+
+td:nth-child(3) {
+  width: 110px;
+}
+
+td:nth-child(4),
+td:nth-child(5),
+td:nth-child(6),
+td:nth-child(7),
+td:nth-child(8),
+td:nth-child(9) {
+  width: 110px;
+}
+
+td input[type="color"] {
+  width: 46px;
+  min-width: 46px;
+  padding: 1px;
+}
+
+.computed {
+  color: #15211e;
+  background: rgba(220, 238, 226, 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+tfoot td {
+  position: sticky;
+  bottom: 0;
+  background: #dceee2;
+  font-weight: 700;
+}
+
+.svg-frame {
+  min-height: 640px;
+  padding: 8px;
+}
+
+#wellSvg {
+  display: block;
+  width: 100%;
+  height: min(760px, calc(100vh - 210px));
+  min-height: 610px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.svg-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.svg-label {
+  font-size: 18px;
+  font-weight: 700;
+  fill: #111827;
+}
+
+.svg-small {
+  font-size: 14px;
+  font-weight: 700;
+  fill: #111827;
+}
+
+.svg-muted {
+  fill: #56635f;
+}
+
+@media (max-width: 1280px) {
+  .topbar {
+    flex-direction: column;
+  }
+
+  .summary-strip {
+    min-width: 0;
+  }
+
+  .controls-band {
+    grid-template-columns: repeat(4, minmax(130px, 1fr));
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrap {
+    max-height: 52vh;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: calc(100vw - 16px);
+    margin: 8px auto;
+  }
+
+  .summary-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-band {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .button-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .button-row button {
+    width: 100%;
+  }
+
+  #wellSvg {
+    min-height: 540px;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls-band {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>钻井液井身结构可视化</h1>
+          <p id="statusLine">哈9-13XC井浆体结构数据</p>
+        </div>
+        <div class="summary-strip" aria-label="计算结果">
+          <div>
+            <span>静压总和</span>
+            <strong id="totalPressure">0.00 MPa</strong>
+          </div>
+          <div>
+            <span>当量密度</span>
+            <strong id="equivalentDensity">0.000 g/cm³</strong>
+          </div>
+          <div>
+            <span>有效段数</span>
+            <strong id="segmentCount">0</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="controls-band" aria-label="井身参数">
+        <label>
+          <span>井名</span>
+          <input id="wellName" type="text" />
+        </label>
+        <label>
+          <span>时间</span>
+          <input id="reportTime" type="datetime-local" />
+        </label>
+        <label>
+          <span>井底垂深 m</span>
+          <input id="tvd" type="number" step="0.1" min="0" />
+        </label>
+        <label>
+          <span>井底斜深 m</span>
+          <input id="md" type="number" step="0.1" min="0" />
+        </label>
+        <label>
+          <span>钻头位置 m</span>
+          <input id="bitDepth" type="number" step="0.1" min="0" />
+        </label>
+        <label>
+          <span>开窗点 m</span>
+          <input id="windowTop" type="number" step="0.1" min="0" />
+        </label>
+        <label>
+          <span>开窗点止 m</span>
+          <input id="windowBottom" type="number" step="0.1" min="0" />
+        </label>
+      </section>
+
+      <section class="workspace">
+        <div class="editor-panel">
+          <div class="section-heading">
+            <h2>浆柱数据表</h2>
+            <div class="button-row">
+              <button id="addRowButton" type="button">新增行</button>
+              <button id="deleteRowButton" type="button">删除选中行</button>
+              <button id="sampleButton" type="button">载入示例</button>
+              <button id="exportButton" type="button">导出 CSV</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="fluidTable" aria-label="浆柱结构数据表">
+              <thead>
+                <tr>
+                  <th class="row-index">#</th>
+                  <th>井身结构</th>
+                  <th>浆体类型</th>
+                  <th>密度 g/cm³</th>
+                  <th>数量 m³</th>
+                  <th>顶部深度 m</th>
+                  <th>底部深度 m</th>
+                  <th>段长 m</th>
+                  <th>各段静压 MPa</th>
+                  <th>颜色</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="7">合计</td>
+                  <td id="totalLength">0.0</td>
+                  <td id="totalPressureCell">0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div class="visual-panel">
+          <div class="section-heading">
+            <h2>井身色块标注图</h2>
+            <div class="view-actions">
+              <label class="switch">
+                <input id="mergeLabels" type="checkbox" checked />
+                <span>合并连续同色段</span>
+              </label>
+            </div>
+          </div>
+          <div class="svg-frame">
+            <svg id="wellSvg" viewBox="0 0 980 760" role="img" aria-label="井身钻井液色块标注图"></svg>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+const STORAGE_KEY = "drilling-fluid-visualizer-v1";
+const HYDROSTATIC_FACTOR = 0.00981;
+
+const editableFields = ["section", "fluidType", "density", "volume", "top", "bottom", "color"];
+
+const defaultMeta = {
+  wellName: "哈9-13XC井",
+  reportTime: "2026-06-25T22:00",
+  tvd: 6642,
+  md: 7157,
+  bitDepth: 4028,
+  windowTop: 6327,
+  windowBottom: 6329.6,
+};
+
+const defaultRows = [
+  {
+    section: "空段长",
+    fluidType: "空段长",
+    density: "",
+    volume: "",
+    top: 0,
+    bottom: 544,
+    color: "#f8fafc",
+  },
+  {
+    section: '3 1/2"钻杆与7 7/8"套管',
+    fluidType: "钻井液",
+    density: 1.25,
+    volume: 37.1,
+    top: 544,
+    bottom: 2580,
+    color: "#16b86a",
+  },
+  {
+    section: '3 1/2"钻杆与7 7/8"套管',
+    fluidType: "重浆段",
+    density: 1.38,
+    volume: 15.0,
+    top: 2580,
+    bottom: 3403,
+    color: "#ff8261",
+  },
+  {
+    section: '3 1/2"钻杆与7 7/8"套管',
+    fluidType: "钻井液",
+    density: 1.15,
+    volume: 11.9,
+    top: 3403,
+    bottom: 4059,
+    color: "#11a9df",
+  },
+  {
+    section: '7 7/8"套管',
+    fluidType: "钻井液",
+    density: 1.15,
+    volume: 29.2,
+    top: 4059,
+    bottom: 5229,
+    color: "#11a9df",
+  },
+  {
+    section: '7 7/8"套管',
+    fluidType: "重浆段",
+    density: 1.57,
+    volume: 10.0,
+    top: 5229,
+    bottom: 5630,
+    color: "#f20f16",
+  },
+  {
+    section: '7 7/8"套管',
+    fluidType: "钻井液",
+    density: 1.15,
+    volume: 17.4,
+    top: 5630,
+    bottom: 6327,
+    color: "#11a9df",
+  },
+  {
+    section: '6 3/4"裸眼',
+    fluidType: "钻井液",
+    density: 1.15,
+    volume: 7.3,
+    top: 6327,
+    bottom: 6642,
+    color: "#11a9df",
+  },
+];
+
+let state = loadState();
+let selectedRowIndex = 0;
+let focusedCell = { row: 0, field: "section" };
+
+const dom = {
+  tableBody: document.querySelector("#fluidTable tbody"),
+  wellSvg: document.querySelector("#wellSvg"),
+  totalPressure: document.querySelector("#totalPressure"),
+  equivalentDensity: document.querySelector("#equivalentDensity"),
+  segmentCount: document.querySelector("#segmentCount"),
+  totalLength: document.querySelector("#totalLength"),
+  totalPressureCell: document.querySelector("#totalPressureCell"),
+  statusLine: document.querySelector("#statusLine"),
+  mergeLabels: document.querySelector("#mergeLabels"),
+};
+
+const metaInputs = ["wellName", "reportTime", "tvd", "md", "bitDepth", "windowTop", "windowBottom"];
+
+document.addEventListener("DOMContentLoaded", init);
+
+function init() {
+  bindMetaInputs();
+  bindActions();
+  render();
+}
+
+function bindMetaInputs() {
+  metaInputs.forEach((id) => {
+    const input = document.getElementById(id);
+    input.value = state.meta[id];
+    input.addEventListener("input", () => {
+      state.meta[id] = input.type === "number" ? toNumber(input.value) : input.value;
+      saveState();
+      render();
+    });
+  });
+}
+
+function bindActions() {
+  document.getElementById("addRowButton").addEventListener("click", addRow);
+  document.getElementById("deleteRowButton").addEventListener("click", deleteSelectedRow);
+  document.getElementById("sampleButton").addEventListener("click", loadSample);
+  document.getElementById("exportButton").addEventListener("click", exportCsv);
+  dom.mergeLabels.addEventListener("change", render);
+
+  dom.tableBody.addEventListener("paste", handleTablePaste);
+}
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved?.meta && Array.isArray(saved?.rows)) {
+      return saved;
+    }
+  } catch {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Some file:// or locked-down browsers disable localStorage.
+    }
+  }
+  return {
+    meta: structuredClone(defaultMeta),
+    rows: structuredClone(defaultRows),
+  };
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Editing and drawing still work when persistence is unavailable.
+  }
+}
+
+function render() {
+  renderMeta();
+  renderTable();
+  renderSummary();
+  renderWell();
+}
+
+function renderMeta() {
+  dom.statusLine.textContent = `${state.meta.wellName}浆体结构数据`;
+  metaInputs.forEach((id) => {
+    const input = document.getElementById(id);
+    if (document.activeElement !== input) {
+      input.value = state.meta[id];
+    }
+  });
+}
+
+function renderTable() {
+  dom.tableBody.innerHTML = "";
+  state.rows.forEach((row, index) => {
+    const tr = document.createElement("tr");
+    if (index === selectedRowIndex) tr.classList.add("selected-row");
+    if (!isRowValid(row)) tr.classList.add("invalid-row");
+
+    tr.appendChild(textCell(index + 1, "row-index"));
+    tr.appendChild(inputCell(row, index, "section", "text"));
+    tr.appendChild(selectCell(row, index));
+    tr.appendChild(inputCell(row, index, "density", "number", "0.01"));
+    tr.appendChild(inputCell(row, index, "volume", "number", "0.1"));
+    tr.appendChild(inputCell(row, index, "top", "number", "0.1"));
+    tr.appendChild(inputCell(row, index, "bottom", "number", "0.1"));
+    tr.appendChild(textCell(formatNumber(segmentLength(row), 1), "computed"));
+    tr.appendChild(textCell(formatNumber(segmentPressure(row), 2), "computed"));
+    tr.appendChild(inputCell(row, index, "color", "color"));
+    dom.tableBody.appendChild(tr);
+  });
+}
+
+function textCell(value, className = "") {
+  const td = document.createElement("td");
+  td.textContent = value;
+  if (className) td.className = className;
+  return td;
+}
+
+function inputCell(row, index, field, type, step = "") {
+  const td = document.createElement("td");
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = row[field];
+  input.dataset.row = index;
+  input.dataset.field = field;
+  if (step) input.step = step;
+  if (type === "number") input.min = "0";
+  input.addEventListener("focus", () => setFocusedCell(index, field));
+  input.addEventListener("input", () => {
+    row[field] = type === "number" ? input.value : input.value;
+    saveState();
+    updateRowCalculations(index);
+    renderSummary();
+    renderWell();
+    updateRowValidity(index);
+  });
+  td.appendChild(input);
+  return td;
+}
+
+function selectCell(row, index) {
+  const td = document.createElement("td");
+  const select = document.createElement("select");
+  select.dataset.row = index;
+  select.dataset.field = "fluidType";
+
+  ["钻井液", "重浆段", "空段长", "隔离液", "清水", "其他"].forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    if (row.fluidType === name) option.selected = true;
+    select.appendChild(option);
+  });
+
+  select.addEventListener("focus", () => setFocusedCell(index, "fluidType"));
+  select.addEventListener("change", () => {
+    row.fluidType = select.value;
+    saveState();
+    updateRowCalculations(index);
+    renderSummary();
+    renderWell();
+    updateRowValidity(index);
+  });
+  td.appendChild(select);
+  return td;
+}
+
+function setFocusedCell(row, field) {
+  selectedRowIndex = row;
+  focusedCell = { row, field };
+  [...dom.tableBody.rows].forEach((tr, index) => {
+    tr.classList.toggle("selected-row", index === selectedRowIndex);
+  });
+}
+
+function updateRowValidity(index) {
+  const tr = dom.tableBody.rows[index];
+  if (!tr) return;
+  tr.classList.toggle("invalid-row", !isRowValid(state.rows[index]));
+}
+
+function updateRowCalculations(index) {
+  const tr = dom.tableBody.rows[index];
+  if (!tr) return;
+  tr.cells[7].textContent = formatNumber(segmentLength(state.rows[index]), 1);
+  tr.cells[8].textContent = formatNumber(segmentPressure(state.rows[index]), 2);
+}
+
+function addRow() {
+  const previous = state.rows.at(-1);
+  const top = previous ? toNumber(previous.bottom) : 0;
+  state.rows.push({
+    section: previous?.section || "",
+    fluidType: "钻井液",
+    density: previous?.density || 1.15,
+    volume: "",
+    top,
+    bottom: top ? top + 100 : 100,
+    color: previous?.color || "#11a9df",
+  });
+  selectedRowIndex = state.rows.length - 1;
+  saveState();
+  render();
+}
+
+function deleteSelectedRow() {
+  if (state.rows.length <= 1) return;
+  state.rows.splice(selectedRowIndex, 1);
+  selectedRowIndex = Math.max(0, selectedRowIndex - 1);
+  saveState();
+  render();
+}
+
+function loadSample() {
+  state = {
+    meta: structuredClone(defaultMeta),
+    rows: structuredClone(defaultRows),
+  };
+  selectedRowIndex = 0;
+  saveState();
+  render();
+}
+
+function exportCsv() {
+  const rows = [
+    ["井身结构", "浆体类型", "密度(g/cm³)", "数量(m³)", "顶部深度(m)", "底部深度(m)", "段长(m)", "各段静压(MPa)", "颜色"],
+    ...state.rows.map((row) => [
+      row.section,
+      row.fluidType,
+      row.density,
+      row.volume,
+      row.top,
+      row.bottom,
+      formatNumber(segmentLength(row), 1),
+      formatNumber(segmentPressure(row), 2),
+      row.color,
+    ]),
+  ];
+  const csv = rows.map((line) => line.map(csvCell).join(",")).join("\n");
+  const blob = new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${state.meta.wellName || "well"}-浆体结构.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function handleTablePaste(event) {
+  const text = event.clipboardData?.getData("text/plain");
+  if (!text || (!text.includes("\t") && !text.includes("\n"))) return;
+
+  event.preventDefault();
+  const startRow = Number(event.target.dataset.row ?? focusedCell.row ?? 0);
+  const startField = event.target.dataset.field || focusedCell.field || "section";
+  const startFieldIndex = Math.max(0, editableFields.indexOf(startField));
+  const matrix = text
+    .trimEnd()
+    .split(/\r?\n/)
+    .map((line) => line.split("\t"));
+
+  matrix.forEach((cells, rowOffset) => {
+    const rowIndex = startRow + rowOffset;
+    while (state.rows.length <= rowIndex) addBlankRow();
+    cells.forEach((cell, cellOffset) => {
+      const field = editableFields[startFieldIndex + cellOffset];
+      if (!field) return;
+      applyPastedValue(state.rows[rowIndex], field, cell);
+    });
+  });
+
+  saveState();
+  render();
+}
+
+function addBlankRow() {
+  state.rows.push({
+    section: "",
+    fluidType: "钻井液",
+    density: "",
+    volume: "",
+    top: "",
+    bottom: "",
+    color: "#11a9df",
+  });
+}
+
+function applyPastedValue(row, field, value) {
+  const text = String(value ?? "").trim();
+  if (field === "color") {
+    if (/^#[0-9a-f]{6}$/i.test(text)) row.color = text;
+    return;
+  }
+  if (["density", "volume", "top", "bottom"].includes(field)) {
+    row[field] = text.replace(/[^\d.-]/g, "");
+    return;
+  }
+  row[field] = text;
+}
+
+function renderSummary() {
+  const metrics = calculateMetrics();
+  dom.totalPressure.textContent = `${formatNumber(metrics.totalPressure, 2)} MPa`;
+  dom.equivalentDensity.textContent = `${formatNumber(metrics.equivalentDensity, 3)} g/cm³`;
+  dom.segmentCount.textContent = String(metrics.visibleSegments.length);
+  dom.totalLength.textContent = formatNumber(metrics.totalLength, 1);
+  dom.totalPressureCell.textContent = formatNumber(metrics.totalPressure, 2);
+}
+
+function calculateMetrics() {
+  const validRows = state.rows.filter(isRowValid);
+  const visibleSegments = validRows.filter(isFluidSegment);
+  const totalPressure = visibleSegments.reduce((sum, row) => sum + segmentPressure(row), 0);
+  const totalLength = visibleSegments.reduce((sum, row) => sum + segmentLength(row), 0);
+  const tvd = positiveNumber(state.meta.tvd) || maxBottom(validRows) || 1;
+  const equivalentDensity = totalPressure / (tvd * HYDROSTATIC_FACTOR);
+
+  return {
+    validRows,
+    visibleSegments,
+    totalLength,
+    totalPressure,
+    equivalentDensity,
+  };
+}
+
+function renderWell() {
+  const metrics = calculateMetrics();
+  const meta = normalizedMeta(metrics.validRows);
+  const displaySegments = dom.mergeLabels.checked ? mergeSegments(metrics.visibleSegments) : metrics.visibleSegments;
+  const liquidLevel = getLiquidLevel(metrics.validRows);
+  const deepest = metrics.visibleSegments.at(-1);
+  const branchColor = deepest?.color || "#11a9df";
+
+  const ySurface = 70;
+  const yBottom = 630;
+  const columnX = 326;
+  const columnWidth = 102;
+  const pipeX = 365;
+  const pipeWidth = 36;
+  const columnCenterX = columnX + columnWidth / 2;
+  const branchDiameter = columnWidth;
+  const branchRadius = branchDiameter / 2;
+  const branchCenterY = yBottom + 70;
+  const branchPath = `M${columnCenterX},${yBottom + branchRadius} C410,730 468,700 526,${branchCenterY} L686,${branchCenterY}`;
+
+  const yScale = (depth) => {
+    const clamped = clamp(toNumber(depth), 0, meta.tvd);
+    return ySurface + (clamped / meta.tvd) * (yBottom - ySurface);
+  };
+
+  const fluidRects = metrics.visibleSegments
+    .map((row) => {
+      const top = yScale(row.top);
+      const bottom = yScale(row.bottom);
+      return svgElement("rect", {
+        x: columnX,
+        y: Math.min(top, bottom),
+        width: columnWidth,
+        height: Math.max(2, Math.abs(bottom - top)),
+        fill: row.color,
+      });
+    })
+    .join("");
+
+  const rightLabels = buildRightLabels(displaySegments, yScale, liquidLevel, meta);
+  const placedRightLabels = placeLabels(rightLabels);
+  const rightLabelSvg = placedRightLabels.map((label) => rightLabel(label)).join("");
+  const windowY = yScale(meta.windowTop);
+  const bitY = yScale(meta.bitDepth);
+  const shoeLabelY = 128;
+  const casingLabelY = 162;
+
+  dom.wellSvg.innerHTML = `
+    <defs>
+      <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L8,3 z" fill="#111827"></path>
+      </marker>
+      <pattern id="hatch" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(20)">
+        <line x1="0" y1="0" x2="0" y2="10" stroke="#54615c" stroke-width="2"></line>
+      </pattern>
+      <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+        <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1f2937" flood-opacity="0.16"></feDropShadow>
+      </filter>
+    </defs>
+
+    <rect x="0" y="0" width="980" height="760" fill="#ffffff"></rect>
+    <rect x="22" y="18" width="270" height="34" fill="#ffffff" stroke="#111827" stroke-width="2"></rect>
+    <text x="38" y="41" class="svg-title">${escapeSvg(state.meta.wellName)}浆体结构数据</text>
+    <text x="694" y="53" class="svg-label">${formatDateLabel(state.meta.reportTime)}</text>
+
+    <line x1="235" y1="${ySurface}" x2="565" y2="${ySurface}" stroke="#111827" stroke-width="2"></line>
+    <rect x="235" y="${ySurface}" width="330" height="13" fill="url(#hatch)"></rect>
+
+    <path d="M286,${ySurface} C282,170 280,275 288,354 C295,430 286,548 306,640" fill="none" stroke="#b8c0bc" stroke-width="18" opacity="0.7"></path>
+    <path d="M468,${ySurface} C474,170 474,275 466,354 C458,430 468,548 447,640" fill="none" stroke="#b8c0bc" stroke-width="18" opacity="0.7"></path>
+    <path d="M292,${ySurface} C288,180 286,285 294,360 C300,438 292,540 312,640" fill="none" stroke="#111827" stroke-width="2"></path>
+    <path d="M462,${ySurface} C468,180 468,285 460,360 C454,438 462,540 441,640" fill="none" stroke="#111827" stroke-width="2"></path>
+
+    <path d="${branchPath}" fill="none" stroke="#206a85" stroke-width="${branchDiameter + 5}"
+      stroke-linecap="butt" stroke-linejoin="round" opacity="0.98"></path>
+    <path d="${branchPath}" fill="none" stroke="${branchColor}" stroke-width="${branchDiameter}"
+      stroke-linecap="butt" stroke-linejoin="round" opacity="0.98"></path>
+    <rect x="${columnX}" y="${ySurface}" width="${columnWidth}" height="${yBottom - ySurface}" fill="#e8eef0" stroke="#111827" stroke-width="2"></rect>
+    ${fluidRects}
+    <rect x="${columnX}" y="${ySurface}" width="${columnWidth}" height="${Math.max(0, yScale(liquidLevel) - ySurface)}" fill="#ffffff" opacity="0.98"></rect>
+
+    <rect x="${pipeX}" y="40" width="${pipeWidth}" height="${bitY - 40}" fill="#ffffff" stroke="#111827" stroke-width="3" filter="url(#softShadow)"></rect>
+    <line x1="${pipeX + pipeWidth / 2}" y1="${bitY}" x2="${pipeX + pipeWidth / 2}" y2="${yBottom}" stroke="#d1d5db" stroke-width="4" stroke-dasharray="8 8"></line>
+    <rect x="318" y="${yBottom}" width="118" height="50" fill="#cfc8ba" stroke="#8f8a7f" stroke-width="2"></rect>
+    <line x1="326" y1="${windowY}" x2="428" y2="${windowY}" stroke="#111827" stroke-width="2" opacity="0.65"></line>
+    <line x1="326" y1="${yScale(liquidLevel)}" x2="428" y2="${yScale(liquidLevel)}" stroke="#111827" stroke-width="2" stroke-dasharray="6 5" opacity="0.7"></line>
+
+    <text x="110" y="${shoeLabelY - 7}" class="svg-small">406.4mm×1500m</text>
+    <line x1="205" y1="${shoeLabelY}" x2="286" y2="${shoeLabelY}" stroke="#111827" stroke-width="2"></line>
+    <text x="110" y="${casingLabelY - 7}" class="svg-small">273.05mm×1500m</text>
+    <line x1="205" y1="${casingLabelY}" x2="286" y2="${casingLabelY}" stroke="#111827" stroke-width="2"></line>
+    <text x="80" y="698" class="svg-small">200.03mm×6685m</text>
+    <line x1="190" y1="692" x2="318" y2="692" stroke="#111827" stroke-width="2"></line>
+    <text x="80" y="730" class="svg-small">241.3mm×6685m</text>
+    <line x1="190" y1="724" x2="318" y2="724" stroke="#111827" stroke-width="2"></line>
+    <text x="704" y="730" class="svg-label">171.5×${formatDepth(meta.md)}m</text>
+
+    <line x1="84" y1="${windowY + 15}" x2="306" y2="${windowY}" stroke="#111827" stroke-width="2" marker-end="url(#arrow)"></line>
+    <text x="42" y="${windowY + 1}" class="svg-label">开窗点位置${formatDepth(meta.windowTop)}-${formatDepth(meta.windowBottom)}m</text>
+
+    <line x1="640" y1="${bitY}" x2="${pipeX + pipeWidth}" y2="${bitY}" stroke="#111827" stroke-width="2" marker-end="url(#arrow)"></line>
+    <text x="660" y="${bitY + 6}" class="svg-label">钻头位置${formatDepth(meta.bitDepth)}m</text>
+
+    ${rightLabelSvg}
+  `;
+}
+
+function buildRightLabels(segments, yScale, liquidLevel, meta) {
+  const labels = [
+    {
+      y: yScale(liquidLevel),
+      text: `环空液面高度${formatDepth(liquidLevel)}m`,
+    },
+  ];
+
+  segments.forEach((segment) => {
+    const top = toNumber(segment.top);
+    const bottom = toNumber(segment.bottom);
+    const visualBottom = bottom >= meta.tvd - 0.01 && meta.md > meta.tvd ? meta.md : bottom;
+    const labelBottom = formatDepth(visualBottom);
+    labels.push({
+      y: yScale((top + Math.min(bottom, meta.tvd)) / 2),
+      text: `${formatDensity(segment.density)}g/cm³${segment.fluidType}${formatDepth(top)}-${labelBottom}m`,
+    });
+  });
+
+  return labels;
+}
+
+function rightLabel(label) {
+  const sourceX = 438;
+  const bendX = 620;
+  const textX = 660;
+  return `
+    <line x1="${bendX}" y1="${label.placedY}" x2="${sourceX}" y2="${label.y}" stroke="#111827" stroke-width="2" marker-end="url(#arrow)"></line>
+    <text x="${textX}" y="${label.placedY + 6}" class="svg-label">${escapeSvg(label.text)}</text>
+  `;
+}
+
+function placeLabels(labels) {
+  const sorted = labels
+    .map((label) => ({ ...label, placedY: clamp(label.y, 92, 640) }))
+    .sort((a, b) => a.placedY - b.placedY);
+  const gap = 45;
+  for (let i = 1; i < sorted.length; i += 1) {
+    if (sorted[i].placedY - sorted[i - 1].placedY < gap) {
+      sorted[i].placedY = sorted[i - 1].placedY + gap;
+    }
+  }
+  const overflow = sorted.at(-1)?.placedY - 642;
+  if (overflow > 0) {
+    for (let i = sorted.length - 1; i >= 0; i -= 1) {
+      sorted[i].placedY -= overflow;
+      if (i < sorted.length - 1 && sorted[i + 1].placedY - sorted[i].placedY < gap) {
+        sorted[i].placedY = sorted[i + 1].placedY - gap;
+      }
+    }
+  }
+  return sorted;
+}
+
+function mergeSegments(rows) {
+  const sorted = [...rows].sort((a, b) => toNumber(a.top) - toNumber(b.top));
+  const merged = [];
+  sorted.forEach((row) => {
+    const previous = merged.at(-1);
+    const sameStyle =
+      previous &&
+      previous.color === row.color &&
+      Number(previous.density) === Number(row.density) &&
+      Math.abs(toNumber(previous.bottom) - toNumber(row.top)) < 0.01;
+
+    if (sameStyle) {
+      previous.bottom = row.bottom;
+      previous.volume = toNumber(previous.volume) + toNumber(row.volume);
+      if (previous.fluidType !== row.fluidType) previous.fluidType = "钻井液";
+    } else {
+      merged.push({ ...row });
+    }
+  });
+  return merged;
+}
+
+function normalizedMeta(rows) {
+  const tvd = positiveNumber(state.meta.tvd) || maxBottom(rows) || 1;
+  const md = Math.max(positiveNumber(state.meta.md) || tvd, tvd);
+  return {
+    ...state.meta,
+    tvd,
+    md,
+    bitDepth: clamp(positiveNumber(state.meta.bitDepth) || 0, 0, tvd),
+    windowTop: clamp(positiveNumber(state.meta.windowTop) || tvd, 0, tvd),
+    windowBottom: clamp(positiveNumber(state.meta.windowBottom) || state.meta.windowTop || tvd, 0, md),
+  };
+}
+
+function isRowValid(row) {
+  const top = toNumber(row.top);
+  const bottom = toNumber(row.bottom);
+  if (!Number.isFinite(top) || !Number.isFinite(bottom)) return false;
+  return bottom >= top;
+}
+
+function isFluidSegment(row) {
+  return isRowValid(row) && positiveNumber(row.density) > 0 && !String(row.fluidType).includes("空");
+}
+
+function segmentLength(row) {
+  if (!isRowValid(row)) return 0;
+  return toNumber(row.bottom) - toNumber(row.top);
+}
+
+function segmentPressure(row) {
+  if (!isFluidSegment(row)) return 0;
+  return positiveNumber(row.density) * segmentLength(row) * HYDROSTATIC_FACTOR;
+}
+
+function getLiquidLevel(rows) {
+  const airGap = rows.find((row) => String(row.fluidType).includes("空"));
+  if (airGap && isRowValid(airGap)) return toNumber(airGap.bottom);
+  const firstFluid = rows.find(isFluidSegment);
+  return firstFluid ? toNumber(firstFluid.top) : 0;
+}
+
+function maxBottom(rows) {
+  return Math.max(0, ...rows.map((row) => toNumber(row.bottom)).filter(Number.isFinite));
+}
+
+function toNumber(value) {
+  if (value === "" || value === null || value === undefined) return 0;
+  return Number(String(value).replace(/[^\d.-]/g, ""));
+}
+
+function positiveNumber(value) {
+  const number = toNumber(value);
+  return Number.isFinite(number) && number > 0 ? number : 0;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function formatNumber(value, digits) {
+  return Number(value || 0).toFixed(digits);
+}
+
+function formatDepth(value) {
+  const number = Number(value || 0);
+  return Number.isInteger(number) ? String(number) : number.toFixed(1).replace(/\.0$/, "");
+}
+
+function formatDensity(value) {
+  return Number(value || 0).toFixed(2).replace(/0$/, "");
+}
+
+function formatDateLabel(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const yyyy = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return `${yyyy}.${month}.${day} ${hh}:${mm}`;
+}
+
+function svgElement(tag, attrs) {
+  const attrText = Object.entries(attrs)
+    .map(([key, value]) => `${key}="${escapeSvg(String(value))}"`)
+    .join(" ");
+  return `<${tag} ${attrText}></${tag}>`;
+}
+
+function escapeSvg(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+</script>
+  </body>
+</html>
+
